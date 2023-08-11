@@ -1,3 +1,5 @@
+#### adsfasdfaewefsad
+
 import tkinter
 from time import sleep
 import socket
@@ -40,7 +42,7 @@ def serverdisconnected(connTV:tkinter.StringVar,
     sglob.close()
     sglob = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     sockThread(labelconn)
-    return    
+    return
 
 def receive_messages(t:tkinter.Text,
                      connTV:tkinter.StringVar,labelconn:tkinter.Label,
