@@ -1,0 +1,4 @@
+pyinstaller.exe -F -w --add-data "..\appIcon240.png;." --add-data "..\appIcon50.png;." -i "..\appIcon240.ico" "..\clientt.py"
+
+
+pyinstaller.exe -F --add-data "..\appIcon240.png;." --add-data "..\appIcon50.png;." -i "..\appIcon240.ico" "..\clientt.py"
