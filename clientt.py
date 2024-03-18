@@ -169,9 +169,12 @@ def afterlogin():
 
         def fun():
             try:
-                print(f"socket.gethostname() is :{socket.gethostname()}")
-                print(f"socket.gethostbyname('Abdullah') is :{socket.gethostbyname('Abdullah')}")
-                sglob.connect((socket.gethostname(),1253))
+                # print(f"socket.gethostname() is :{socket.gethostname()}")
+                # print(f"socket.gethostbyname('Abdullah') is :{socket.gethostbyname('Abdullah')}")
+                with open('theServerIP') as file:
+                    # print((file.readline()[:-1],int(file.readline())))
+                    sglob.connect((file.readline()[:-1],int(file.readline())))
+
                 return 1
             except ConnectionRefusedError:
                 return 0
