@@ -1,6 +1,7 @@
 #### adsfasdfaewefsad
 ### asdfasrew
 import tkinter
+from tkinter import ttk
 from time import sleep
 import socket
 import threading
@@ -62,7 +63,8 @@ def receive_messages(t:tkinter.Text,
         t['state']='disabled'
 
 
-def sendcommand(e:tkinter.Entry,s:socket.socket,connTV:tkinter.StringVar):
+def sendcommand(e:tkinter.Entry,s:socket.socket,connTV:tkinter.StringVar,receiver):
+    print(receiver)
     textmsg = e.get().strip()
     if textmsg == '': return
     if connTV.get()=='CONNECTED': 
@@ -111,8 +113,8 @@ def afterlogin():
     
     main = tkinter.Tk()
     main.focus()
-    app_icon = tkinter.PhotoImage(file=resource_path("appIcon240.png"))
-    send_icon = tkinter.PhotoImage(file=resource_path("appIcon50.png"))
+    app_icon = tkinter.PhotoImage(file=resource_path("footages/appIcon240.png"))
+    send_icon = tkinter.PhotoImage(file=resource_path("footages/appIcon50.png"))
     connTV = tkinter.StringVar(value="NOT CONNECTED")
     main.iconphoto(True,app_icon)
     scwidth = main.winfo_screenwidth()
@@ -131,18 +133,37 @@ def afterlogin():
 
     ####################### send_frame #############################
     send_frame = tkinter.Frame(main,bg="#009999",)
-    message_entry = tkinter.Entry(master=send_frame,width= 300,font=("Arial",15),selectbackground="#006666",fg="#002222",border=0,)
+    message_entry = tkinter.Entry(master=send_frame,width= 300,font=("Arial",15),
+                                  selectbackground="#006666",fg="#002222",border=0,)
+    usrComboBoxVariable = tkinter.StringVar(value="All") 
+    users_ls = [ 
+        "All",
+        "Monday", 
+        "Tuesday", 
+        "Wednesday", 
+        "Thursday", 
+        "Friday", 
+        "Saturday", 
+        "Sunday"
+    ] 
+    listaya = ttk.Combobox(master=send_frame,
+                            state="readonly",
+                            values=users_ls,
+                            textvariable=usrComboBoxVariable,
+    )
+    listaya.pack(side="top")
     message_entry.focus_set()
     send_button = tkinter.Button(master=send_frame
                         ,image=send_icon,border=0
                         ,bg="#009999",activebackground="#009999",padx=19
                         ,text=" "
                         ,foreground="#009999",activeforeground="#009999"
-                        ,compound="center",command=lambda: sendcommand(message_entry,sglob,connTV))
+                        ,compound="center"
+                        ,command=lambda: sendcommand(message_entry,sglob,connTV,listaya.get()))
     send_button.pack(side="right")
     message_entry.pack(side="left")
     send_frame.pack(side="bottom",pady=15,padx=20)
-    message_entry.bind("<Return>",lambda x: sendcommand(message_entry,sglob,connTV))
+    message_entry.bind("<Return>",lambda x: sendcommand(message_entry,sglob,connTV,listaya.get()))
     ####################### send_frame #############################
 
     labelconn = tkinter.Label(master=main,textvariable=connTV,bg= "#CC0000",fg="#F0F0F0",font=("Arial",13,"bold"))
@@ -174,7 +195,6 @@ def afterlogin():
                 with open('theServerIP') as file:
                     # print((file.readline()[:-1],int(file.readline())))
                     sglob.connect((file.readline()[:-1],int(file.readline())))
-
                 return 1
             except ConnectionRefusedError:
                 return 0
