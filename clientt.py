@@ -171,7 +171,7 @@ def afterlogin():
             try:
                 print(f"socket.gethostname() is :{socket.gethostname()}")
                 print(f"socket.gethostbyname('Abdullah') is :{socket.gethostbyname('Abdullah')}")
-                sglob.connect(('192.168.1.3',1253))
+                sglob.connect((socket.gethostname(),1253))
                 return 1
             except ConnectionRefusedError:
                 return 0
