@@ -31,6 +31,7 @@ def handle_client(connsocket : socket.socket,address):
 
 
 s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+# print((socket.gethostbyname(socket.gethostname()),1253))
 s.bind((socket.gethostname(),1253))
 print("------ Server Started")
 s.listen()
