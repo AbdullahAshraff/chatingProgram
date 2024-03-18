@@ -90,7 +90,7 @@ def login_window():
         afterlogin()
 
     logwin = tkinter.Tk()
-    app_icon = tkinter.PhotoImage(file=resource_path("appIcon240.png"))
+    app_icon = tkinter.PhotoImage(file=resource_path("footages/appIcon240.png"))
     logwin.geometry(f"250x150+{logwin.winfo_screenwidth()//2-125}+{logwin.winfo_screenheight()//2-200}")
     logwin.resizable(False,False)
     logwin.title("Login")
