@@ -1,5 +1,3 @@
-#### adsfasdfaewefsad
-### asdfasrew
 import tkinter
 from tkinter import ttk
 from time import sleep
@@ -9,6 +7,13 @@ from tkinter import messagebox
 from os import path
 import sys
 
+class User:
+    def __init__(self,username,address=('',''),state='',color='') -> None:
+        self.username = username
+        self.address = address
+        self.color = color
+        self.state = state
+
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -16,9 +21,8 @@ def resource_path(relative_path):
     return path.join(base_path, relative_path)
 
 
-
-username = "AAAAAA"
 sglob = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+theUser = User("AAAAAA")
 lastline=0
 msg_font = ("Arial",15)
 usr_font = ("Arial",15,"bold")
@@ -29,7 +33,7 @@ usercolorsls = list({
     '#1dd161',  #green
 })
 color_count:int = 0
-
+current_users = []
 
 def serverdisconnected(connTV:tkinter.StringVar,
                        t:tkinter.Text,labelconn:tkinter.Label,
@@ -47,47 +51,70 @@ def serverdisconnected(connTV:tkinter.StringVar,
 
 def receive_messages(t:tkinter.Text,
                      connTV:tkinter.StringVar,labelconn:tkinter.Label,
-                     sockThread):
+                     sockThread,listaya):
     global lastline,color_count
     while True:
         try:
-            chatline = sglob.recv(1024).decode()
+            received_line = sglob.recv(1024).decode()
         except ConnectionResetError:
             serverdisconnected(connTV,t,labelconn,sockThread)
             return
-        t['state']='normal'
-        t.insert("end",chatline[5:]+' \n')
-        lastline+=1; color_count=(color_count+1)%len(usercolorsls)
-        t.tag_add('username',f'{lastline}.0',f'{lastline}.{chatline.find(":")-4}')
-        t.tag_config('username',foreground=usercolorsls[color_count],font=usr_font)
-        t['state']='disabled'
+        if received_line=='': continue
+        rec_ls = received_line.split(maxsplit=2)
+        if rec_ls[0] == "[uco]":
+            if rec_ls[2] == theUser.username:
+                return
+            current_users.append(User(rec_ls[1],rec_ls[2],state="connected"))
+            listaya.configure(values=["All"] + [i.username for i in current_users])
+        elif rec_ls[0] == "[udi]":
+            theone = ''
+            for idx,u in enumerate(current_users):
+                if u.username==rec_ls[1]: theone = idx; break
+            if theone != '': current_users.pop(theone)
+            listaya.configure(values=["All"] + [i.username for i in current_users])
+        elif rec_ls[0] == '[msg]':
+            chatusr = rec_ls[1]
+            chatmsg = rec_ls[2]
+            t['state']='normal'
+            t.insert("end",f"{chatusr}: {chatmsg}"+' \n')
+            lastline+=1
+            color_count=(color_count+1)%len(usercolorsls)
+            t.tag_add('username',f'{lastline}.0',f'{lastline}.{len(chatusr)+1}')
+            t.tag_config('username',foreground=usercolorsls[color_count],font=usr_font)
+            t['state']='disabled'
 
 
-def sendcommand(e:tkinter.Entry,s:socket.socket,connTV:tkinter.StringVar,receiver):
-    print(receiver)
+def sendcommand(e:tkinter.Entry,s:socket.socket,connTV:tkinter.StringVar,receiver_username):
     textmsg = e.get().strip()
     if textmsg == '': return
     if connTV.get()=='CONNECTED': 
-        s.send(bytes(textmsg,"utf-8"))
-        e.delete(0,'end')
+        if receiver_username == 'All':
+            s.send(bytes(f"[msg]`[{theUser.username}]`[All]`{textmsg}","utf-8"))
+            e.delete(0,'end')
+        else:
+            receiver_address = ''
+            for i in current_users:
+                if i.username == receiver_username:
+                    receiver_address = i.address 
+            if receiver_address !='':
+                s.send(bytes(f"[msg]`[{theUser.username}]`[{receiver_address}]`{textmsg}","utf-8"))
+                e.delete(0,'end')
 
 def close_main(window:tkinter.Tk,s:socket.socket,connTV:tkinter.StringVar):
-    global username
     result = messagebox.askokcancel("Confirm", "Are you sure you want to close the window?")
     if result:
         if connTV.get()=="CONNECTED":
             try:
-                s.send(bytes(f"{username},DISCONNECT","utf-8"))
+                s.send(bytes(f"{theUser.username},DISCONNECT","utf-8"))
             except ConnectionResetError:
                 pass
         window.destroy()
 
 def login_window():
     def subusername():
-        global username
         input =  em.get().strip()
         if input=="": return
-        username=input
+        theUser.username=input
         logwin.destroy()
         afterlogin()
 
@@ -108,9 +135,6 @@ def login_window():
 
 
 def afterlogin():
-
-    global username
-    
     main = tkinter.Tk()
     main.focus()
     app_icon = tkinter.PhotoImage(file=resource_path("footages/appIcon240.png"))
@@ -125,7 +149,7 @@ def afterlogin():
     wmin = w-50
     hmin = int(scheight/2)
 
-    main.title(username)
+    main.title(theUser.username)
     main.geometry(f"{w}x{scheight-100}+{scwidth-w-15}+{0}")
     main.maxsize(width=wmax,height=hmax)
     main.minsize(width=wmin,height=hmin)
@@ -136,19 +160,9 @@ def afterlogin():
     message_entry = tkinter.Entry(master=send_frame,width= 300,font=("Arial",15),
                                   selectbackground="#006666",fg="#002222",border=0,)
     usrComboBoxVariable = tkinter.StringVar(value="All") 
-    users_ls = [ 
-        "All",
-        "Monday", 
-        "Tuesday", 
-        "Wednesday", 
-        "Thursday", 
-        "Friday", 
-        "Saturday", 
-        "Sunday"
-    ] 
     listaya = ttk.Combobox(master=send_frame,
                             state="readonly",
-                            values=users_ls,
+                            values=["All"] + [i.username for i in current_users],
                             textvariable=usrComboBoxVariable,
     )
     listaya.pack(side="top")
@@ -190,10 +204,7 @@ def afterlogin():
 
         def fun():
             try:
-                # print(f"socket.gethostname() is :{socket.gethostname()}")
-                # print(f"socket.gethostbyname('Abdullah') is :{socket.gethostbyname('Abdullah')}")
                 with open('theServerIP') as file:
-                    # print((file.readline()[:-1],int(file.readline())))
                     sglob.connect((file.readline()[:-1],int(file.readline())))
                 return 1
             except ConnectionRefusedError:
@@ -214,8 +225,8 @@ def afterlogin():
                 break
             else:
                 sleep(2)
-        threading.Thread(target=receive_messages, args=(t,connTV,labelconn,sockThread),daemon=True).start()
-        sglob.sendall(bytes(f"{username}","utf-8"))
+        threading.Thread(target=receive_messages, args=(t,connTV,labelconn,sockThread,listaya),daemon=True).start()
+        sglob.sendall(bytes(f"{theUser.username}","utf-8"))
     
     threading.Thread(target=sockThread,args=(labelconn,),daemon=True).start()
     main.protocol("WM_DELETE_WINDOW", lambda:close_main(main,sglob,connTV))
