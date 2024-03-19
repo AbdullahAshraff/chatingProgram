@@ -53,8 +53,9 @@ def handle_client(connsocket : socket.socket,address):
 
 
 s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-# print((socket.gethostbyname(socket.gethostname()),1253))
-s.bind((socket.gethostname(),1253))
+print(f"the host ip is {(socket.gethostbyname(socket.gethostname()))}. Edit it in the file \"theServerIP\" to make the client connect to the server.")
+with open("theServerIP") as file:
+    s.bind((socket.gethostname(),int(file.readlines()[1])))
 print("------ Server Started")
 s.listen()
 while True:
